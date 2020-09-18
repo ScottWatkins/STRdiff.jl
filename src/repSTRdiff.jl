@@ -104,6 +104,7 @@ function repSTRdiff(infile::String, hapsizes::Array; keepall=false, showhaps=fal
     function clean_dir()
         rt1 = run(`bash -c "rm -f *.out"`);
         rt2 = run(`bash -c "rm -f *_fam* *_trio*"`);
+        rt3 = run(`bash -c "rm -f log*"`);
         println()
     end
 
