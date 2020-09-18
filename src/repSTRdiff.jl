@@ -1,21 +1,25 @@
 """
-    repSTRdiff("infile.txt", [hapsize_1, hapsize_2, ... hapsize_N]; showall=false)
+    repSTRdiff("infile.txt", [hapsize_1, hapsize_2, ... hapsize_N];
+        keepall=false, showhaps=false)
 
 Run getSTRdiff for multiple user specified haplotype sizes.
 Retrieve the best estimates from all runs and output a final table.
-See getSTRdiff for additional help.
+See getSTRdiff for additional details.
 
 Options:
 
-    showall=false            Show all intermediate files [true|false]
+    keepall    Keep all intermediate files [true|false]
+    showhaps   Show the offspring and de novo trio haplotypes [true|false]
 
 """
-function repSTRdiff(infile::String, hapsizes::Array; showall=false)
+function repSTRdiff(infile::String, hapsizes::Array; keepall=false, showhaps=false)
 
     sites = []
     n = splitext(infile)
     fn = n[1]
 
+    global s_haps = showhaps
+    
     open(infile, "r") do file   #get all loci to run
         for i in eachline(file)
 
@@ -30,8 +34,9 @@ function repSTRdiff(infile::String, hapsizes::Array; showall=false)
         end
     end
 
+
     for i in hapsizes
-        getSTRdiff(infile, i)
+        getSTRdiff(infile, i, showhaps=s_haps)
     end
 
     for i in sites
@@ -102,9 +107,9 @@ function repSTRdiff(infile::String, hapsizes::Array; showall=false)
         println()
     end
 
-    if showall == false
+    if keepall == false
         clean_dir()
-    elseif showall == true
+    elseif keepall == true
         println("INFO: intermediate files for STR sites and haplotype lengths retained.")
     else
         clean_dir()

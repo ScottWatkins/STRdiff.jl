@@ -1,4 +1,3 @@
-
 include("bgzip_file.jl")
 include("readbigvcf.jl")
 include("vcf2dataframe.jl")
@@ -6,7 +5,7 @@ include("get_pedfile_trios.jl")
 include("str_allele_length.jl")
 
 """
-    (t, dt, p, nd, mutCon) = STR_iht(vcffile.vcf.gz, pedigree, STR_location, iid)
+    (t, dt, p, nd, mutCon) = STR_iht(vcffile.vcf.gz, pedigree, STR_location, iid; showhaps=false)
 
 Read a small **phased** vcf data array and return dataframes containing 1)
 transmitting chromosomes and the STR allele differences and 2) a dataframe
@@ -17,9 +16,12 @@ file may contain multiple pedigrees.
 
 STR location format is 1:258132133
 
+Options:
+    showhaps        show haplotypes for offspring with de novo STR [false]
+
 Requires: DataFrames, CSV
 """
-function STR_iht(vcf, pedfile, str, iid, mutSTR, othpar)
+function STR_iht(vcf, pedfile, str, iid, mutSTR, othpar; showhaps=true)
 
     vcf_data_array = readbigvcf(vcf)
 
@@ -44,7 +46,6 @@ function STR_iht(vcf, pedfile, str, iid, mutSTR, othpar)
 for i in peds
 
     pid = i; header = []; tp = []
-
     t_all = get(trios, i, 0)
 
     for i in t_all
@@ -209,12 +210,12 @@ for i in peds
         c1_bestids = join(reshape(c1_bestids, (1, length(c1_bestids) ) ), ",")
         c2_bestids = join(reshape(c2_bestids, (1, length(c2_bestids) ) ), ",")
 
-
-        print_denovo_trio = true
-        if print_denovo_trio == true
+#SET TO TRUE TO SEE THE HAPLOTYPES FOR PARENT AND GRANDPARENT!
+        if showhaps == true
             if occursin(Regex("$iid[p|q]"), names(tdf)[1]) #print only denovo parent trio
-                println("INFO: phased chromosomes for trio with the de novo STR.")
-                println("INFO: de novo STR site genotypes are -1 (unphasable)")
+                println("TABLE: phased chromosomes for de novo STR carrying parent,
+grandparent1, and grandparent2.")
+                println("TABLE INFO: de novo STR genotypes are shown by -1 (unphasable)")
                 println(tdf)
                 println("$iid p transmitted from: ", c1_bestids,
                 "\n", "$iid q transmitted from: ", c2_bestids, "\n")
@@ -298,7 +299,7 @@ for i in peds
 
         if sum(occursin.(Regex(othpar), mut_ids)) > 0 #other parent has de novo
             println("WARN: one or more phased chromosomes from parent $othpar
-also carries the mutant STR allele.")
+cannot be distiguished from the chromosome with the de novo STR allele.")
             println("INFO: omitting phased chromosomes containing the de novo STR
 allele that match the other parent $othpar at a rate of ≥ 0.85")
             othchrid = mut_offspr[ occursin.(Regex(othpar), mut_ids), :]
@@ -308,7 +309,11 @@ allele that match the other parent $othpar at a rate of ≥ 0.85")
             p_oth = Float64[]
             not_othchr = Int64[]
 
-            println(mut_df)
+
+            if showhaps == true
+                println("TABLE: Phased offspring chromosomes with de novo allele:")
+                println(mut_df)
+            end
 
             for i in 1:size(mut_df, 2)
                 p = sum(othchr .== mut_df[:,i]) / size(mut_df, 1)
@@ -329,10 +334,11 @@ allele that match the other parent $othpar at a rate of ≥ 0.85")
 
         if size(mut_df, 2) == 0
 
-            println("ERROR: consensus phased chromosome with de novo STR also matches
-the other parent (>90%). This result may result can be caused by 1) very high
-similarity among grandparent haplotypes, 2) incorrect phasing, or 3) a false positive
-de novo STR.  Try rerunning this site with different haplotype lengths\n")
+            println("WARN: Inconclusive results. The consensus phased chromosome with the
+de novo STR matches the other parent (>90%). This result can be
+caused by 1) very high similarity among grandparent haplotypes,
+2) incorrect phasing, or 3) a false positive de novo STR.
+Try rerunning this site with different haplotype lengths.\n")
 
             num_mut_iht = -9
             return(fftdf, ftdf, hap_df, fracnd, mutCon, str_sizes, num_mut_iht)
@@ -352,12 +358,10 @@ de novo STR.  Try rerunning this site with different haplotype lengths\n")
         num_mut_iht = size(mut_df,2)
 
         println("INFO: Found $num_mut_iht offspring carrying the de novo allele $mutSTR\n")
-        println("TABLE: Phased offspring chromosomes with de novo allele:")
-        println(mut_df)
 
     end
 
-    sort!(fftdf, :parent_chr)
+sort!(fftdf, :parent_chr)
 
     return (fftdf, ftdf, hap_df, fracnd, mutCon, str_sizes, num_mut_iht)
 

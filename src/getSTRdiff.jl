@@ -1,5 +1,6 @@
 """
-    getSTRdiff(datafile, haplotype_size; show="full_table|full_pedigrees")
+    getSTRdiff(datafile, haplotype_size;
+        show="full_table|full_pedigrees", showhaps=false)
 
 STRdiff is a program to extract and phase the region surrounding a suspected
 de novo STR event in the CEPH pedigrees.
@@ -17,6 +18,11 @@ Inheritance of the new STR allele found on the phased chromosomes of the
 CEPH children is compared with the phased chromosomes in the grandparents to
 determine which grandparental chromosome transmitted the mutation.
 
+It is strongly recommended that a given STR be analyzed at different
+haplotype lengths and that only runs with a unique solution score of 
+≥5 be considered for additional analysis.  Use the repSTRdiff function
+to automate multiple runs 
+
 Dependencies: bcftools, bgzip
 
 Input file format example: (single spaced, tab-delimited, header optional)\n
@@ -28,10 +34,10 @@ function getSTRdiff(infile, hapsize::Int64; kwargs...)
 
 kw = Dict(kwargs)
 sh = get(kw, :show, nothing)
+s_haps = get(kw, :showhaps, false)
 
 fname = splitext(infile)
 fn = fname[1]
-
 loc_list = String[]
 
 if (hapsize < 1000) || (hapsize > 500000)
@@ -51,10 +57,13 @@ open(infile) do file
             continue
         end
 
-        z = preprocessDenovoSTRs(line, window=hapsize)
-
         l = '-'^80
+
         println("\n$l")
+        printstyled("START RUN\nINFO: Processing $line\nINFO: Haplotype size = $hapsize\n", color=:cyan, bold=true)
+        println("$l")
+
+        z = preprocessDenovoSTRs(line, window=hapsize)
 
         datin = split(line, '\t')
         if length(datin) != 5
@@ -86,8 +95,8 @@ open(infile) do file
         fa = z[1][1]; fb = z[1][2]; site = z[1][3]; iid = z[1][4]
         ta = z[1][5]; tb = z[1][6]; mutSTR = z[1][7]; par_genos = z[1][8]
 
-        (p, q, r, u, mutCon, fa_strs, num_iht_mut) = STR_iht(fa, fb, site, iid, mutSTR, othpar)
-        (tp, tq, tr, tu, mutCon_empty, t_strs, num_iht_mut_null) = STR_iht(ta, tb, site, iid, mutSTR, othpar)
+        (p, q, r, u, mutCon, fa_strs, num_iht_mut) = STR_iht(fa, fb, site, iid, mutSTR, othpar; showhaps=s_haps)
+        (tp, tq, tr, tu, mutCon_empty, t_strs, num_iht_mut_null) = STR_iht(ta, tb, site, iid, mutSTR, othpar; showhaps=s_haps)
 
         if (mutCon != nothing) && ( size(tr, 1) != length(mutCon) )
             error("Variant site $site has failed for hapsize $hapsize.
@@ -251,7 +260,7 @@ alleles transmitting the de novo event, please vary the hapsize value.")
             println(OUT, "$ped\t$iid\t$site\t$trans_ps\t$tps_sex\t$ppg\t$ppsize\t$mutSTR\t$dsize\t$str_s_diff\t$dsize_diff\t$num_iht_mut\t$mprobs\t$uss\t$hapsize\t$expbp")
             close(OUT)
 
-            println("\n$l\n$l")
+            println("$l\n$l")
         end
 
         run(`bash -c "rm -f *fam*"`)

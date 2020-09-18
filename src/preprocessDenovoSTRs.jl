@@ -116,6 +116,8 @@ window = get(kw, :window, 100000)
             run(`bcftools index -f $site.only.vcf.gz`)
         end
 
+        #println("INFO: Phasing flanking SNPs genotypes")
+
         function micro_phaser(vcf, ped)
 
             if Sys.which("beagle.r1399.jar") == nothing
@@ -123,8 +125,7 @@ window = get(kw, :window, 100000)
             else
                 beagle = Sys.which("beagle.r1399.jar")
             end
-
-            run(`java -Xmx1g -jar $beagle gt=$vcf ped=$ped out=phased`)
+            run(`bash -c "java -Xmx1g -jar $beagle gt=$vcf ped=$ped out=phased 1>log.out 2>error.out"`)
             run(`bcftools index -f phased.vcf.gz`)
             run(`mv phased.vcf.gz $vcf`)
             run(`mv phased.vcf.gz.csi $vcf.csi`)
@@ -164,7 +165,7 @@ window = get(kw, :window, 100000)
 
         run(`bash -c "rm -f trio_merged.vcf.gz $site.only.vcf.gz trio_merged_sort.vcf.gz.csi  $site.only.vcf.gz.csi famsites.txt phased.* famsites_t.txt *tmp*" `)
 
-        printstyled("INFO: unphased de novo trio genotypes: ", raw_genos, color=:green)
+        printstyled("INFO: unphased de novo trio genotypes: ", raw_genos, "\n", color=:light_green)
 
         STR_location = a[4]
 

@@ -14,7 +14,9 @@ function micro_phaser(vcf, ped)
         beagle = Sys.which("beagle.r1399.jar")
     end
 
-    run(`java -Xmx1g -jar $beagle gt=$vcf ped=$ped out=phased`)
+    printstyled("TEST1", color=:red)
+
+    run(`bash -c "java -Xmx1g -jar $beagle gt=$vcf ped=$ped out=phased 1>log 2>error" `)
     run(`mv phased.vcf.gz $vcf`)
     run(`rm phased.log phased.warnings`)  #optional directory cleaning
 
