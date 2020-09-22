@@ -20,7 +20,7 @@ determine which grandparental chromosome transmitted the mutation.
 
 It is strongly recommended that a given STR be analyzed at different
 haplotype lengths and that only runs with a unique solution score of 
-≥5 be considered for additional analysis.  Use the repSTRdiff function
+>10 be considered for additional analysis.  Use the repSTRdiff function
 to automate multiple runs 
 
 Dependencies: bcftools, bgzip
