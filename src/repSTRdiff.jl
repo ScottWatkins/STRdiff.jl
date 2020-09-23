@@ -104,16 +104,13 @@ function repSTRdiff(infile::String, hapsizes::Array; keepall=false, showhaps=fal
 
             function uss_check(best)
 
-                if length(best) > 70
+                if (length(best) > 70) && (!occursin(r"\t-9\t", best))
 
                     b = split(best, '\t')
                     s = parse(Int64, b[14])
 
-                    if s == -9
-                        continue
-                    end
-                    
                     if s ≤ min_uss_score
+                        
                         c = replace(b[13], "[" => "")
                         c = replace(c, "]" => "")
                         p = parse.(Float64, split(c, r", "))
@@ -121,6 +118,7 @@ function repSTRdiff(infile::String, hapsizes::Array; keepall=false, showhaps=fal
                         d2 = abs(p[1] - p[4])
                         d3 = abs(p[2] - p[3])
                         d4 = abs(p[2] - p[4])
+                        
                         if (d1 ≥ 0.1 && d2 ≥ 0.10 && d3 ≥ 0.1 && d4 ≥ 0.1)
                             uss2 = floor(Int64,(minimum([d1, d2, d3, d4]) * 100))
                         end
