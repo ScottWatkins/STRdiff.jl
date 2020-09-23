@@ -12,7 +12,7 @@ c=n    Specify the column number n that contains the sites [1].
 
 Dependencies: DelimitedFiles
 """
-function check_vcf_sites(infile::String, datafile::String, c=1)
+function check_vcf_sites(infile::String, datafile::String; c=1)
 
     print("Reading all sites from $datafile ... ")
     filein = readdlm(datafile, '\t')
