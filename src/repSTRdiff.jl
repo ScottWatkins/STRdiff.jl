@@ -109,6 +109,10 @@ function repSTRdiff(infile::String, hapsizes::Array; keepall=false, showhaps=fal
                     b = split(best, '\t')
                     s = parse(Int64, b[14])
 
+                    if s == -9
+                        continue
+                    end
+                    
                     if s ≤ min_uss_score
                         c = replace(b[13], "[" => "")
                         c = replace(c, "]" => "")
