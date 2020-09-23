@@ -8,15 +8,15 @@ for de novo STR mutations found in the CEPH pedigrees.
 STR mutations are first identified in the parents using a tool
 like HipSTR.
 
-The program uses beagle to infer phase of the trio containing
+The program uses beagle to infer chromosome phase in the trio containing
 the parent with the de novo STR and both grandparents.  The
-rest of the family is then phased independently.  The new
-STR allele is identified on phased chromosomes in the
-children.  Because WGS data contains some genotyping issues,
-possible phasing issues, new SNP mutations, and raw variants,
+rest of the family is then also phased independently.  The new
+STR allele is then identified on phased chromosomes in the
+children.  Because phased WGS data will contain some genotyping issues,
+possible phasing issues, new SNP mutations, and rare variants,
 a consensus chromosome carring the de novo STR allele is created.
 This consensus is then compared to the grandparents to identify
-the most likely grandparent transmitting the de novo allele.
+the most likely grandparental chromosome transmitting the de novo allele.
 Where possible, the size difference is determined based on the
 information in the vcf file.
 
