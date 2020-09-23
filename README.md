@@ -1,6 +1,5 @@
 # STRdiff
 
-##STRdiff
 
 STRdiff is a project specific tool for inferring the parent-of-origin
 for de novo STR mutations found in the CEPH pedigrees.
