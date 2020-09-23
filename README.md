@@ -13,7 +13,7 @@ rest of the family is then also phased independently.  The new
 STR allele is then identified on phased chromosomes in the
 children.  Because phased WGS data will contain some genotyping issues,
 possible phasing issues, new SNP mutations, and rare variants,
-a consensus chromosome carring the de novo STR allele is created.
+a consensus chromosome carrying the de novo STR allele is created.
 This consensus is then compared to the grandparents to identify
 the most likely grandparental chromosome transmitting the de novo allele.
 Where possible, the size difference is determined based on the
