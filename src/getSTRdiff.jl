@@ -14,6 +14,27 @@ of the transmitting parent is returned.
 This version requires 1) that the pedigree has two parents and grandparents
 and 2) that the de novo event occurred in one of the CEPH parents.
 
+**Important**
+The order of the samples in the pedigree matters. The pedigree file
+**must** have samples in the following order in the pedfile.
+
+Paternal trio
+line1=paternal grandfather, line2=paternal grandmother, line3=father; 
+
+Maternal trio
+line4=maternal grandfather, line5=maternal grandmother, line6=mother;
+
+then all the children in any order. An example is shown.
+
+1358	8542	0	0	1	0
+1358	8544	0	0	2	0
+1358	8538	8542	8544	1	0
+1358	8541	0	0	1	0
+1358	8543	0	0	2	0
+1358	8540	8541	8543	2	0
+1358	8534	8538	8540	1	0
+additional children ...
+
 Inheritance of the new STR allele found on the phased chromosomes of the
 CEPH children is compared with the phased chromosomes in the grandparents to
 determine which grandparental chromosome transmitted the mutation.
