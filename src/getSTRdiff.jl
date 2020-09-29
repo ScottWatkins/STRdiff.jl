@@ -16,7 +16,7 @@ and 2) that the de novo event occurred in one of the CEPH parents.
 
 **Important**
 The order of the samples in the pedigree matters. The pedigree file
-**must** have samples in the following order in the pedfile.
+**must** have samples in the following order.
 
 Paternal trio
 line1=paternal grandfather, line2=paternal grandmother, line3=father; 
