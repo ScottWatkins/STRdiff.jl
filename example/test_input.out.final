@@ -1,0 +1,3 @@
+#ped	iid	loc	transmitting_gp	transmitting_gp_sex	transmitting_gp_str	transmitting_gp_str_size	parent_str	parent_str_size	str_allele_change	size_change_bp	phased_offspring_with_de_novo	four_gp_match_probabilities	uniq_soln_score	hapsize	str_type
+test	8314	5:155603130	8320q	male	0	46	1	44	1	-2	4	[0.363636, 0.972028, 0.13986, 0.342657]	61	40000	3
+test	8317	5:177584928	8466p	male	0	44	1	48	1	4	9	[0.984496, 0.860465, 0.705426, 0.643411]	12	40000	4
