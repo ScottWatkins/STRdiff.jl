@@ -45,7 +45,8 @@ function STR_iht(vcf, pedfile, str, iid, mutSTR, othpar; showhaps=true)
 
 for i in peds
 
-    pid = i; header = []; tp = []
+    pid = i; header = []; tp = []; t_all=[]; tdf=DataFrame();
+
     t_all = get(trios, i, 0)
 
     for i in t_all
@@ -53,13 +54,9 @@ for i in peds
 
         ids = split(i, ',')
 
-#print(line, ids, line, "\n")
-
         for a in eachindex(ids)
             push!(header, Symbol(ids[a] * "p"), Symbol(ids[a] * "q"))
         end
-
-#println(header)
 
         tdf = hap_df[ :, header]  #df of each child,father,mother trio
 
@@ -96,8 +93,10 @@ for i in peds
 
 #println("c1pfm=", c1pfm)
 #println("c1altmatch=", c1altmatch)
+#println()
 #println("c2pfm=", c2pfm)
 #println("c2altmatch=", c2altmatch)
+#println()
 
         chriht = ["f1", "f2", "m1", "m2"]
 
@@ -117,8 +116,7 @@ for i in peds
 #println("c1altmax=", c1altmax)
 #println("c2altmax=", c2altmax)
 
-
-        if maximum(c1pfm) < 0.80     #declare phasing error for >20% mismatch
+        if maximum(c1pfm) < 0.80     #declare phasing/rec. error for >20% mismatch
             c1max = ["pe"]; c1altmax = ["pe"]
         end
 
@@ -136,8 +134,8 @@ for i in peds
         c1_i = intersect(c1max, c1altmax)  #take isect of best frac & best alts
         c2_i = intersect(c2max, c2altmax)  #->most likely inheritance
 
-#println("i1max=", c1_i)
-#println("i2max=", c2_i)
+#println("%%%%i1max=", c1_i)
+#println("%%%%i2max=", c2_i)
 
         function pickone(c)  #if f1,f2 or m1,m2 equal probs then choose randomly
             if length(c) == 2 && ( c[1][1] == c[2][1] )
@@ -210,12 +208,11 @@ for i in peds
         c1_bestids = join(reshape(c1_bestids, (1, length(c1_bestids) ) ), ",")
         c2_bestids = join(reshape(c2_bestids, (1, length(c2_bestids) ) ), ",")
 
-#SET TO TRUE TO SEE THE HAPLOTYPES FOR PARENT AND GRANDPARENT!
+#SET TO TRUE TO SEE THE HAPLOTYPES FOR PARENT AND GRANDPARENTS!
         if showhaps == true
             if occursin(Regex("$iid[p|q]"), names(tdf)[1]) #print only denovo parent trio
-                println("TABLE: phased chromosomes for de novo STR carrying parent,
-grandparent1, and grandparent2.")
-                println("TABLE INFO: de novo STR genotypes are shown by -1 (unphasable)")
+                println("TABLE: phased chromosomes for parent with de novo STR and both grandparents.")
+                println("TABLE INFO: genotypes for the (de novo) STR locus are shown as -1 (unphasable).")
                 println(tdf)
                 println("$iid p transmitted from: ", c1_bestids,
                 "\n", "$iid q transmitted from: ", c2_bestids, "\n")
@@ -285,17 +282,16 @@ grandparent1, and grandparent2.")
     mutCon = nothing
     num_mut_iht = 0
 
-#println(ftdf)
+    if size(hap_df,2) > 7  #run fam but not trio here
 
-    if size(hap_df,2) > 8  #run fam but not trio here
+        #remove othpar if present
+        othpar1 = join([othpar, "p"], "")
+        othpar2 = join([othpar, "q"], "")
+        ftdf = ftdf[findall(!in([ othpar1, othpar2 ]), ftdf.child_chr), : ]
 
         mut_offspr = (ftdf[ ftdf.child_str .== mutSTR, [:child_chr]]) #df
         mut_ids = vec(Array(mut_offspr))  #array, 2209p ...
         mut_df = hap_df[:, Symbol.(mut_ids)]
-
-#println(mut_df)
-#println(mut_offspr)
-#println(mut_ids)
 
         if sum(occursin.(Regex(othpar), mut_ids)) > 0 #other parent has de novo
             println("WARN: one or more phased chromosomes from parent $othpar
@@ -334,11 +330,11 @@ allele that match the other parent $othpar at a rate of ≥ 0.85")
 
         if size(mut_df, 2) == 0
 
-            println("WARN: Inconclusive results. The consensus phased chromosome with the
-de novo STR matches the other parent (>90%). This result can be
-caused by 1) very high similarity among grandparent haplotypes,
+            println("WARN: The offsprings' consensus phased chromosome with the
+de novo STR is very similar the other parent. This result can be
+caused by 1) high similarity among grandparent haplotypes,
 2) incorrect phasing, or 3) a false positive de novo STR.
-Try rerunning this site with different haplotype lengths.\n")
+Try different haplotype lengths.\n")
 
             num_mut_iht = -9
             return(fftdf, ftdf, hap_df, fracnd, mutCon, str_sizes, num_mut_iht)
@@ -361,7 +357,7 @@ Try rerunning this site with different haplotype lengths.\n")
 
     end
 
-sort!(fftdf, :parent_chr)
+    sort!(fftdf, :parent_chr)
 
     return (fftdf, ftdf, hap_df, fracnd, mutCon, str_sizes, num_mut_iht)
 

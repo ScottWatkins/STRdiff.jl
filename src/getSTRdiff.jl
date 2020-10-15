@@ -1,55 +1,74 @@
 """
-    getSTRdiff(datafile, haplotype_size;
-        show="full_table|full_pedigrees", showhaps=false)
+    getSTRdiff(datafile, haplotype_size; showhaps=false, show="full_pedigree")
 
-STRdiff is a program to extract and phase the region surrounding a suspected
-de novo STR event in the CEPH pedigrees.
-
-All trios from a pedigree are processed to identify any difference in the
-STR allele length between grandparent and parent.
-
-A table of these differences, based on local chromosomal phasing, and the sex
-of the transmitting parent is returned.
-
-This version requires 1) that the pedigree has two parents and grandparents
-and 2) that the de novo event occurred in one of the CEPH parents.
-
-**Important**
-The order of the samples in the pedigree matters. The pedigree file
-**must** have samples in the following order.
-
-Paternal trio
-line1=paternal grandfather, line2=paternal grandmother, line3=father; 
-
-Maternal trio
-line4=maternal grandfather, line5=maternal grandmother, line6=mother;
-
-then all the children in any order. An example is shown.
-
-1358	8542	0	0	1	0
-1358	8544	0	0	2	0
-1358	8538	8542	8544	1	0
-1358	8541	0	0	1	0
-1358	8543	0	0	2	0
-1358	8540	8541	8543	2	0
-1358	8534	8538	8540	1	0
-additional children ...
-
-Inheritance of the new STR allele found on the phased chromosomes of the
-CEPH children is compared with the phased chromosomes in the grandparents to
-determine which grandparental chromosome transmitted the mutation.
-
-It is strongly recommended that a given STR be analyzed at different
-haplotype lengths and that only runs with a unique solution score of 
->10 be considered for additional analysis.  Use the repSTRdiff function
-to automate multiple runs 
-
-Dependencies: bcftools, bgzip
+STRdiff is a program to extract and phase genotypes in the 
+region surrounding a suspected de novo STR event in CEPH pedigrees. All 
+trios from a pedigree are then processed to identify any difference in the
+STR allele length between grandparent and parent.  A table of differences,
+based on local chromosomal phasing, and the sex of the transmitting parent
+is returned.
 
 Input file format example: (single spaced, tab-delimited, header optional)\n
-#PEDIGREE       VCF_FILE                IID     STRLOC         STR_TYPE(bp)\n
-1463.ped        1463_phase_in.vcf.gz    2188    2:174994186    2\n
-1337.ped        1337.vcf.gz             1295    1:2581321      4\n
+#PEDIGREE       VCFFILE                IID     STRLOC         STRTYPE(bp)\n
+1463.ped        1463\\_phase_in.vcf.gz    2188    2:174994186    2\n
+1463.ped        1463\\_phase_in.vcf.gz    2188    1:2581321      4\n
+
+This version requires that the pedigree has two parents and grandparents
+and that the de novo event occurred in one of the CEPH parents.
+
+An example command: getSTRdiff("myGenotypes.vcf.gz", 50000)
+
+**Important:**\n  
+The pedigree file **must** have the grandparents and parent samples
+in the order described below.
+
+Paternal trio
+
+line1: paternal grandfather
+
+line2: paternal grandmother
+
+line3: father
+
+Maternal trio
+
+line4: maternal grandfather
+
+line5: maternal grandmother
+
+line6: mother
+
+then all the children.
+
+For example (single spaced, tab-delimited),
+
+1358    8542    0    0    1    0\n
+1358    8544    0    0    2    0\n
+1358    8538    8542    8544    1    0\n
+1358    8541    0    0    1    0\n
+1358    8543    0    0    2    0\n
+1358    8540    8541    8543    2    0\n
+1358    8534    8538    8540    1    0\n
+
+additional children ...
+
+The haplotype carrying the novel STR allele in the offspring 
+is compared with the haplotypes of the grandparents to
+determine which grandparental chromosome most likely gave rise
+to the new STR allele.
+
+It is strongly recommended that a given STR be analyzed at different
+haplotype lengths and that only runs with a unique solution score of >10
+be considered for additional analysis.
+
+Use the repSTRdiff function to automate multiple runs.
+
+During testing, we documented a small number cases where beagle produced
+offspring with different haplotypes depending on the input order of the
+children in the pedigree file.  This beagle-related issue appeared only
+at a small number of STR loci.
+
+Dependencies: bcftools, bgzip
 """
 function getSTRdiff(infile, hapsize::Int64; kwargs...)
 
@@ -61,8 +80,8 @@ fname = splitext(infile)
 fn = fname[1]
 loc_list = String[]
 
-if (hapsize < 1000) || (hapsize > 500000)
-    error("hapsizes, bp on each side of the STR, should be between 10000 and 320000.")
+if (hapsize < 10000) || (hapsize > 500000)
+    error("hapsizes, bp on each side of the STR, should be between 10000 and 500000.")
 end
 
 OUT = open("$fn.$hapsize.out", "w")
@@ -117,7 +136,10 @@ open(infile) do file
         ta = z[1][5]; tb = z[1][6]; mutSTR = z[1][7]; par_genos = z[1][8]
 
         (p, q, r, u, mutCon, fa_strs, num_iht_mut) = STR_iht(fa, fb, site, iid, mutSTR, othpar; showhaps=s_haps)
+
         (tp, tq, tr, tu, mutCon_empty, t_strs, num_iht_mut_null) = STR_iht(ta, tb, site, iid, mutSTR, othpar; showhaps=s_haps)
+
+#println("%%%%%$p  $q  $r  $u  $mutCon  $fa_strs $num_iht_mut \n\n")
 
         if (mutCon != nothing) && ( size(tr, 1) != length(mutCon) )
             error("Variant site $site has failed for hapsize $hapsize.
@@ -255,16 +277,18 @@ alleles transmitting the de novo event, please vary the hapsize value.")
                 return tps
             end
 
-            if sh == "full_tables"
-                println(q, "\n", tq)
-            elseif sh == "full_pedigrees"
+            if sh == "full_table"
+                println("TABLE: predicted inheritance patterns given the inferred haplotypes ...")
+                println(q, "\n")
+            elseif sh == "full_pedigree"
+                println("TABLE: haplotypes for the pedigree ...")
                 println(r, "\n", tr)
             end
 
             mprobs = round.(match_p, digits=6)
             tps_sex = namesex(tps)
             println()
-            println("Grandparents match probability with offspring consensus: ", round.(match_p, digits=6) )
+            println("Grandparent-offspring match probabilites: ", round.(match_p, digits=4) )
             println("Grandparent transmitting the de novo allele: $trans_ps  $rflag")
             println("Transmitting grandparent's sex: $tps_sex")
             println("Unique solution score: $uss")

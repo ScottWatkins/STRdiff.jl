@@ -1,10 +1,11 @@
 """
-    repSTRdiff("infile.txt", [hapsize_1, hapsize_2, ... hapsize_N];
+    repSTRdiff("runparams.txt", [hapsize_1, hapsize_2, ... hapsize_N];
         keepall=false, showhaps=false, min_uss_score=10)
 
 Run getSTRdiff for multiple user-specified haplotype sizes.
 Retrieve the best estimates from all runs and output a final table.
-See getSTRdiff for additional details.
+
+See getSTRdiff for additional details on input format.
 
 Options:
 
@@ -18,14 +19,36 @@ Options:
                    probabilities for both male and both female grandparental
                    chromosomes will be shown parenthetically next to the uss
                    score (e.g. 3,(17)).  This allows the sex of the transmitter
-                   to be determined in rare cases where there is high similarity 
-                   between the transmitting person's chromosomes and no single
+                   to be determined in (rare) cases where there is high similarity 
+                   between the transmitting parent's chromosomes and no one single
                    chromosome solution produced a high uss score.  For example,
-                   [0.91, 0.90, 0.40, 0.73] would return (17) indicating that
-                   the first grandparent (male) is likely to transmit the mutation
+                   [0.91, 0.90, 0.40, 0.73] would return (17), indicating support for
+                   de novo transmission by the first grandparent (male)
                    even though the single chromosome solution is low.
                    This value is shown only when the uss score for the best estimate
                    falls below the min_uss_score setting [default = 10].
+
+----------------------------------------------------------
+Example sequence of commands for automation:
+----------------------------------------------------------
+
+1.  Run check\\_vcf\\_sites to clean input sites.
+
+    check\\_vcf\\_sites("infile.vcf.gz", "datafile.txt"; c=4)
+
+2.  Run repSTRdiff at a single haplotype length:
+
+    repSTRdiff("runparams.txt", [20000])
+
+    Remove any STR sites that fail from the input file. 
+
+3.  Run repSTRdiff over a range of haplotype lengths:
+
+    repSTRdiff("runparams.txt", [20000:10000:300000...])
+
+Examine the results in runparams.txt.out.final. 
+
+-----------------------------------------------------------
 
 """
 function repSTRdiff(infile::String, hapsizes::Array; keepall=false, showhaps=false, min_uss_score=10)
@@ -146,7 +169,7 @@ function repSTRdiff(infile::String, hapsizes::Array; keepall=false, showhaps=fal
     function clean_dir()
         rt1 = run(`bash -c "rm -f *.out"`);
         rt2 = run(`bash -c "rm -f *_fam* *_trio*"`);
-        rt3 = run(`bash -c "rm -f log*"`);
+        rt3 = run(`bash -c "rm -f log* error*"`);
         println()
     end
 

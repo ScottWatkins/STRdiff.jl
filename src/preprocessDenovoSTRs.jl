@@ -97,7 +97,7 @@ window = get(kw, :window, 100000)
 
             mutSTR = collect(setdiff(cs, ps))
 
-            raw_genos = join([ p1, ": ", par[end-1][1], "/", par[end-1][3], ": ", p2, ": ", par[end][1], "/", par[end][3], " child: ", cs_geno], "")
+            raw_genos = join([ p1, ": ", par[end-1][1], "/", par[end-1][3], ",  ", p2, ": ", par[end][1], "/", par[end][3], ",  ", "Parent (child $p1 x $p2): ", cs_geno], "")
 
             if length(mutSTR) == 0
                 error("no unique STR allele in child: $par_genos -> $cs_geno")
